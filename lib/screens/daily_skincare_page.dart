@@ -18,31 +18,36 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
       'name': 'Cleanser',
       'details': 'Cetaphil Gentle Skin Cleanser',
       'time': '8:00 PM',
-      'checked': false
+      'checked': false,
+      'imageUrl': null, // Added imageUrl to store Firebase Storage URL
     },
     {
       'name': 'Toner',
       'details': 'Thayers Witch Hazel Toner',
       'time': '8:02 PM',
-      'checked': false
+      'checked': false,
+      'imageUrl': null,
     },
     {
       'name': 'Moisturizer',
       'details': 'Kiehl Ultra Facial Cream',
       'time': '8:04 PM',
-      'checked': false
+      'checked': false,
+      'imageUrl': null,
     },
     {
       'name': 'Sunscreen',
       'details': 'Supergoop Unseen Sunscreen SPF 40',
       'time': '8:06 PM',
-      'checked': false
+      'checked': false,
+      'imageUrl': null,
     },
     {
       'name': 'Lip Balm',
       'details': 'Glossier Birthday Balm Dotcom',
       'time': '8:08 PM',
-      'checked': false
+      'checked': false,
+      'imageUrl': null,
     },
   ];
 
@@ -59,6 +64,7 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
         setState(() {
           skincareItems[index]['checked'] = true;
           skincareItems[index]['time'] = _getCurrentTime();
+          skincareItems[index]['imageUrl'] = url; // Store web url
         });
 
         print("Image captured: $url");
@@ -74,6 +80,7 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
         setState(() {
           skincareItems[index]['checked'] = true;
           skincareItems[index]['time'] = _getCurrentTime();
+          skincareItems[index]['imageUrl'] = downloadUrl; // Store Firebase Storage URL
         });
 
         print("Image uploaded: $downloadUrl");
@@ -123,7 +130,6 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
                             decoration: BoxDecoration(
                               color: item['checked'] ? Colors.grey[200] : Colors.grey[200],
                               borderRadius: BorderRadius.circular(8),
-                              // border: Border.all(color: Colors.pink),
                             ),
                             child: item['checked']
                                 ? const Icon(Icons.check, size: 20, color: Colors.black)
@@ -154,6 +160,15 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
                           item['time'],
                           style: TextStyle(fontSize: 14, color: Colors.pink),
                         ),
+                        if (item['imageUrl'] != null) // Display image if available
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: kIsWeb ? Image.network(item['imageUrl']) : Image.file(File(Uri.parse(item['imageUrl']).toFilePath())),
+                            ),
+                          ),
                       ],
                     ),
                   );
