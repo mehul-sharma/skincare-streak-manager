@@ -62,7 +62,7 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
                 itemBuilder: (context, index) {
                   final item = skincareItems[index];
                   return Card(
-                    color: Colors.pink[50],
+                    color: Colors.grey[50],
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -85,7 +85,7 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
                           const Icon(Icons.photo_camera, color: Colors.grey),
                           const SizedBox(width: 8),
                           Text(item['time'],
-                              style: const TextStyle(color: Colors.grey)),
+                              style: const TextStyle(color: Colors.pink)),
                         ],
                       ),
                     ),
