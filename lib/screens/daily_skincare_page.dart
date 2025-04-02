@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:html' as html; // Required for Flutter Web
 import 'dart:io';
 
 class DailySkincareScreen extends StatefulWidget {
@@ -46,20 +48,36 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
 
   Future<void> _openCamera(int index) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
 
-    if (image != null) {
-      String fileName = "skincare_${DateTime.now().millisecondsSinceEpoch}.jpg";
-      Reference ref = FirebaseStorage.instance.ref().child('skincare/$fileName');
-      await ref.putFile(File(image.path));
-      String downloadUrl = await ref.getDownloadURL();
+    if (kIsWeb) {
+      final XFile? image = await picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        final blob = html.Blob([bytes]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
 
-      setState(() {
-        skincareItems[index]['checked'] = true;
-        skincareItems[index]['time'] = _getCurrentTime();
-      });
+        setState(() {
+          skincareItems[index]['checked'] = true;
+          skincareItems[index]['time'] = _getCurrentTime();
+        });
 
-      print("Image uploaded: $downloadUrl");
+        print("Image captured: $url");
+      }
+    } else {
+      final XFile? image = await picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        String fileName = "skincare_${DateTime.now().millisecondsSinceEpoch}.jpg";
+        Reference ref = FirebaseStorage.instance.ref().child('skincare/$fileName');
+        await ref.putFile(File(image.path));
+        String downloadUrl = await ref.getDownloadURL();
+
+        setState(() {
+          skincareItems[index]['checked'] = true;
+          skincareItems[index]['time'] = _getCurrentTime();
+        });
+
+        print("Image uploaded: $downloadUrl");
+      }
     }
   }
 
