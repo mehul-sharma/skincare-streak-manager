@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 class DailySkincareScreen extends StatefulWidget {
   const DailySkincareScreen({Key? key}) : super(key: key);
@@ -13,13 +16,13 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
       'name': 'Cleanser',
       'details': 'Cetaphil Gentle Skin Cleanser',
       'time': '8:00 PM',
-      'checked': true
+      'checked': false
     },
     {
       'name': 'Toner',
       'details': 'Thayers Witch Hazel Toner',
       'time': '8:02 PM',
-      'checked': true
+      'checked': false
     },
     {
       'name': 'Moisturizer',
@@ -37,13 +40,38 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
       'name': 'Lip Balm',
       'details': 'Glossier Birthday Balm Dotcom',
       'time': '8:08 PM',
-      'checked': true
+      'checked': false
     },
   ];
+
+  Future<void> _openCamera(int index) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      String fileName = "skincare_${DateTime.now().millisecondsSinceEpoch}.jpg";
+      Reference ref = FirebaseStorage.instance.ref().child('skincare/$fileName');
+      await ref.putFile(File(image.path));
+      String downloadUrl = await ref.getDownloadURL();
+
+      setState(() {
+        skincareItems[index]['checked'] = true;
+        skincareItems[index]['time'] = _getCurrentTime();
+      });
+
+      print("Image uploaded: $downloadUrl");
+    }
+  }
+
+  String _getCurrentTime() {
+    final now = DateTime.now();
+    return "${now.hour}:${now.minute.toString().padLeft(2, '0')} ${now.hour >= 12 ? 'PM' : 'AM'}";
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -61,33 +89,54 @@ class _DailySkincareScreenState extends State<DailySkincareScreen> {
                 itemCount: skincareItems.length,
                 itemBuilder: (context, index) {
                   final item = skincareItems[index];
-                  return Card(
-                    color: Colors.grey[50],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: ListTile(
-                      leading: Checkbox(
-                        value: item['checked'],
-                        onChanged: (value) {
-                          setState(() {
-                            item['checked'] = value;
-                          });
-                        },
-                      ),
-                      title: Text(item['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(item['details'],
-                          style: const TextStyle(color: Colors.pink)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.photo_camera, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          Text(item['time'],
-                              style: const TextStyle(color: Colors.pink)),
-                        ],
-                      ),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              item['checked'] = !item['checked'];
+                            });
+                          },
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: item['checked'] ? Colors.grey[200] : Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                              // border: Border.all(color: Colors.pink),
+                            ),
+                            child: item['checked']
+                                ? const Icon(Icons.check, size: 20, color: Colors.black)
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'],
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              item['details'],
+                              style: TextStyle(fontSize: 14, color: Colors.pink),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => _openCamera(index),
+                          child: const Icon(Icons.camera_alt_outlined, size: 20, color: Colors.grey),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          item['time'],
+                          style: TextStyle(fontSize: 14, color: Colors.pink),
+                        ),
+                      ],
                     ),
                   );
                 },
